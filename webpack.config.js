@@ -4,13 +4,19 @@ const fs = require('fs');
 
 module.exports = {
   mode: 'development',
-  entry: {
-    main: './src/index.js'
-  },
+
+    entry: [
+    'regenerator-runtime/runtime',
+    './src/index.js'
+  ],
+
   resolve: {
+    extensions: ['.js', '.ts', '.json'],
     alias: {
       'fs': 'browserfs/dist/shims/fs.js',
       'path': 'browserfs/dist/shims/path.js',
+      'processGlobal': 'browserfs/dist/shims/process.js',
+      'bufferGlobal': 'browserfs/dist/shims/bufferGlobal.js',
       'bfsGlobal': require.resolve('browserfs')
     }
   },  
@@ -44,5 +50,6 @@ module.exports = {
     ]
   },
   plugins: [
+    new webpack.ProvidePlugin({ BrowserFS: 'bfsGlobal', process: 'processGlobal', Buffer: 'bufferGlobal' })
   ]
 };

@@ -1,9 +1,18 @@
-import { dvi2html } from 'dvi2html';
+import { dvi2html } from './dvi2html/src/index';
 import { Writable } from 'stream';
 import * as library from './library';
 import pako from 'pako';
 import { ReadableStream } from "web-streams-polyfill";
 import fetchStream from 'fetch-readablestream';
+//import { fstat } from 'fs';
+
+import fontenc from './fontenc.json';
+import l3backend_dvips from './l3backend-dvips.json';
+import l3backend_dvisvgm from './l3backend-dvisvgm.json';
+import cmsl10 from './cmsl10.json';
+import cmex7 from './cmex7.json';
+
+var fs = require('fs');
 
 // document.currentScript polyfill
 if (document.currentScript === undefined) {
@@ -18,10 +27,36 @@ var url = new URL(document.currentScript.src);
 var host = url.host;
 var urlRoot = url.protocol + '//' + host;
 
-let pages = 1000;
+let pages = 2500;
 var coredump;
 var code;
 
+async function load() {
+  let tex = await fetch(urlRoot + '/tex.wasm');
+  code = await tex.arrayBuffer();
+
+
+  library.initFs(null);
+  // let response = await fetchStream(urlRoot + '/core.dump.gz');
+  // //let dumpStr = urlRoot + '/7620f557a41f2bf40820e76ba1fd4d89a484859d.gz';
+
+  const compressed = new Uint8Array(
+    await fetch(urlRoot + '/core.dump').then(res => res.arrayBuffer()) //res.arrayBuffer())
+    , 0, pages * 65536);
+  // Above example with Node.js Buffers:
+  // Buffer.from('H4sIAAAAAAAAE8tIzcnJBwCGphA2BQAAAA==', 'base64');
+  console.log(compressed);
+
+  //const decompressed = fflate.decompressSync(compressed);
+
+  //const decompressed = pako.ungzip(compressed);
+
+  coredump = compressed;//new Uint8Array(decompressed, 0, pages * 65536);
+
+  console.log(coredump);
+}
+
+/*
 async function load() {
   let tex = await fetch(urlRoot + '/tex.wasm');
   code = await tex.arrayBuffer();
@@ -43,6 +78,7 @@ async function load() {
 
   coredump = new Uint8Array( inf.result, 0, pages*65536 );
 }
+*/
 
 function copy(src)  {
   var dst = new Uint8Array(src.length);
@@ -50,14 +86,172 @@ function copy(src)  {
   return dst;
 }
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 async function tex(input) {
   if (input.match('\\\\begin *{document}') === null) {
     input = '\\begin{document}\n' + input;
   }
   input = input + '\n\\end{document}\n';
 
+  /*
+  const libraries = [
+  "calc",
+  "positioning",
+  "fit",
+  "backgrounds",
+  "trees",
+  "arrows",
+  "shapes",
+  "shapes.geometric",
+  "shapes.misc",
+  "shapes.symbols",
+  "shapes.arrows",
+  "shapes.callouts",
+  "shapes.multipart",
+  "decorations.text",
+  "3d",
+  "angles",
+  "babel",
+  "decorations.markings",
+  "decorations.shapes",
+  "intersections",
+  "patterns",
+  "quotes",
+  "shadows",
+  "fadings",
+  "through",
+  "pgfplots.groupplots"
+]
+
+let tikzlibraries = libraries.map( (library) => `\\usetikzlibrary{${library}}` ).join('')
+
+const packages = [
+  "listings",
+"lstmisc",
+"everyhook",
+"svn-prov",
+"etoolbox",
+"xcolor",
+"url",
+"fancyvrb",
+"keyval",
+"tkz-euclide",
+"tikz",
+"tikz-cd",
+"pgf",
+"pgfrcs",
+"pgffor",
+"pgfkeys",
+"pgfplots",
+"forloop",
+"ifthen",
+"environ",
+"trimspaces",
+"amssymb",
+"amsfonts",
+"amsmath",
+"amstext",
+"amsgen",
+"amsbsy",
+"amsopn",
+"amsthm",
+"xifthen",
+"calc",
+  "ifmtarg",
+  "multido",
+  "comment",
+  "gettitlestring",
+"kvoptions",
+"ltxcmds",
+"kvsetkeys",
+"nameref",
+"refcount",
+"infwarerr",
+"fontenc",
+"hyperref",
+"iftex",
+"pdftexcmds",
+"kvdefinekeys",
+"pdfescape",
+"hycolor",
+"letltxmacro",
+"auxhook",
+"intcalc",
+"etexcmds",
+"bitset",
+"bigintcalc",
+"atbegshi-ltx",
+"rerunfilecheck",
+"ifvtex"
+]
+
+let preamble = "\\def\\pgfsysdriver{pgfsys-ximera.def}\\PassOptionsToPackage{dvisvgm}{graphicx}\\PassOptionsToPackage{hypertex}{hyperref}\\RequirePackage{expl3}\\RequirePackage[makeroom]{cancel}" + packages.map( (pkg) => `\\RequirePackage{${pkg}}` ).join('') + tikzlibraries + "\\PassOptionsToClass{web}{ximera}\\let\\abovecaptionskip=\\relax\\let\\belowcaptionskip=\\relax\\let\\maketitle=\\relax\n";
+
+preamble = preamble + "\\documentclass{ximera}\\renewcommand{\\documentclass}[2][]{}\\snapshot\n";
+*/
+//   let preamble = "";
+//   input =
+//     //"\\documentclass[margin=0pt]{standalone}" + "\n" +
+//     //"\\def\\pgfsysdriver{pgfsys-ximera.def}" + "\n" +
+//     //"\\pgfplotsset{compat=1.17}" + "\n" +
+
+//     /*"\\newcommand{\\cubeit}[1]{\\directjs{" + "\n" +
+//     "tex.print('$');" + "\n"
+//     "tex.print(`#1^3 = ${#1*#1*#1}`);" + "\n"
+//     "tex.print('$');" + "\n" +
+//     "}}" + "\n" +*/
+//     //"\\usepackage{tikz}" + "\n" +
+//     preamble + 
+//     "\\begin{document}" + "\n" +
+    
+//     // "\\begin{tikzpicture}" + "\n" +
+//     // "\\draw (0,0) circle (1in);" + "\n" +
+//     // "\\end{tikzpicture}" + "\n"+
+// input +
+//     "\\end{document}" + "\n";
+
+  
+//   const aux = "\\relax" + "\n" +
+// "\\providecommand\\hyper@newdestlabel[2]{}"+ "\n" +
+// "\\providecommand\\HyperFirstAtBeginDocument{\\AtBeginDocument}"+ "\n" +
+// "\\HyperFirstAtBeginDocument{\\ifx\\hyper@anchor\\@undefined"+ "\n" +
+// "\\global\\let\\oldcontentsline\\contentsline"+ "\n" +
+// "\\gdef\\contentsline#1#2#3#4{\\oldcontentsline{#1}{#2}{#3}}"+ "\n" +
+// "\\global\let\\oldnewlabel\\newlabel"+ "\n" +
+// "\\gdef\\newlabel#1#2{\\newlabelxx{#1}#2}"+ "\n" +
+// "\\gdef\\newlabelxx#1#2#3#4#5#6{\\oldnewlabel{#1}{{#2}{#3}}}"+ "\n" +
+// "\\AtEndDocument{\\ifx\\hyper@anchor\\@undefined"+ "\n" +
+// "\\let\\contentsline\\oldcontentsline"+ "\n" +
+// "\\let\\newlabel\\oldnewlabel"+ "\n" +
+// "\\fi}"+ "\n" +
+// "\\fi}"+ "\n" +
+// "\\global\\let\\hyper@last\\relax"+ "\n" +
+// "\\gdef\\HyperFirstAtBeginDocument#1{#1}"+ "\n" +
+// "\\ttl@finishall"+ "\n" +
+// "\\gdef \\@abspage@last{1} \n";
+  
+  
+  //const aux = "\\relax " + "\n" +
+  //  "\\gdef \\@abspage@last{1}" + "\n";
+  const aux = "";
+
   library.deleteEverything();
-  library.writeFileSync( "sample.tex", Buffer.from(input) );
+
+  console.log(input);
+
+  //library.writeFileSync("sample.tex", Buffer.from(input));
+  //library.writeFileSync("./l3backend-dvips.def", Buffer.from(l3backend_dvips.FileBytes));
+  //library.writeFileSync("./cmsl10.tfm", Buffer.from(cmsl10.FileBytes));
+  //console.log(fs);
+
+  fs.writeFileSync("./sample.tex", Buffer.from(input));
+  fs.writeFileSync("./l3backend-dvips.def", Buffer.from(l3backend_dvips.FileBytes, 'base64'));
+  fs.writeFileSync("./l3backend-dvisvgm.def", Buffer.from(l3backend_dvisvgm.FileBytes, 'base64'));
+  fs.writeFileSync("./cmsl10.tfm", Buffer.from(cmsl10.FileBytes, 'base64'));
+  fs.writeFileSync("./cmex7.tfm", Buffer.from(cmex7.FileBytes, 'base64'));
+  //fs.writeFileSync('./sample.aux', Buffer.from(aux));
+  //fs.writeFileSync('./fontenc.sty', Buffer.from(fontenc.fontenc));
 
   let memory = new WebAssembly.Memory({initial: pages, maximum: pages});
   
@@ -67,11 +261,23 @@ async function tex(input) {
   library.setMemory( memory.buffer );
   library.setInput( " sample.tex \n\\end\n" );
   
-  let results = await WebAssembly.instantiate(code, { library: library,
+  let wasm = await WebAssembly.instantiate(code, { library: library,
                                                       env: { memory: memory }
                                                     });
 
-  return library.readFileSync( "sample.dvi" );
+  //const wasmExports = wasm.instance.exports;
+  //library.setWasmExports( wasmExports );
+  
+  wasm.instance.exports.main();
+  
+  //await delay(15000);
+
+  let dviData = library.readFileSync("sample.dvi");
+  
+  console.log(btoa(unescape(encodeURIComponent(dviData))))
+
+  return dviData;
+  //return fs.readFileSync("./sample.dvi");
 }
 
 window.onload = async function(){
@@ -84,10 +290,13 @@ window.onload = async function(){
     
     let dvi = await tex(text);
     
+    console.log(dvi);
+
     let html = "";  
     const page = new Writable({
       write(chunk, encoding, callback) {
         html = html + chunk.toString();
+        console.log("write chunk: " + chunk.toString());
         callback();
       }
     });
@@ -97,7 +306,16 @@ window.onload = async function(){
       return;
     }  
 
-    let machine = await dvi2html( streamBuffer(), page );
+    let machine;
+    try {
+      //page.write('<svg>');
+      machine = await dvi2html(Buffer.from(dvi), page); //streamBuffer(), page);
+      //page.write('</svg>');
+    } catch (err) {
+      console.log(err);
+    }
+    console.log(machine);
+
     div.style.display = 'flex';
     div.style.width = machine.paperwidth.toString() + "pt";
     div.style.height = machine.paperheight.toString() + "pt";
