@@ -1,0 +1,45 @@
+/// <reference types="node" />
+import { Machine, Rule } from "./machine";
+export default class VDomMachine extends Machine {
+    pointsPerDviUnit: number;
+    svgDepth: number;
+    color: string;
+    colorStack: string[];
+    paperwidth: number;
+    paperheight: number;
+    pageContent: any[];
+    svgContent: string[];
+    lastOutputHeight: number;
+    svgStyle: any;
+    h: any;
+    ximeraRuleHandler: any;
+    ximeraPushHandler: any;
+    ximeraPopHandler: any;
+    callback: any;
+    ximeraRule: string | undefined;
+    ximeraEnvironments: string[];
+    ximeraRuleOpen: string | undefined;
+    ximeraRuleOpened: string | undefined;
+    ximeraRuleContent: any[];
+    ximeraRuleStyle: any;
+    addToPage(content: any): void;
+    addToSvg(content: string): void;
+    pushColor(c: string): void;
+    popColor(): void;
+    setXimeraRule(r: string): void;
+    setXimeraRuleOpen(r: string): void;
+    setXimeraRuleClose(): void;
+    pushXimera(e: string): void;
+    popXimera(): void;
+    setPapersize(width: number, height: number): void;
+    beginPage(page: any): void;
+    endPage(): void;
+    putHTML(html: string): void;
+    beginSVG(): void;
+    endSVG(): void;
+    putSVG(svg: string): void;
+    constructor(h: any, ximeraRuleHandler: any, ximeraPushHandler: any, ximeraPopHandler: any, callback: any);
+    preamble(numerator: number, denominator: number, magnification: number, comment: string): void;
+    putRule(rule: Rule): void;
+    putText(text: Buffer): number;
+}
