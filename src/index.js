@@ -1,10 +1,10 @@
 import { dvi2html } from './dvi2html/src/index';
 import { Writable } from 'stream';
 import * as library from './library';
-import pako from 'pako';
 import { ReadableStream } from "web-streams-polyfill";
 import fetchStream from 'fetch-readablestream';
 //import { fstat } from 'fs';
+
 
 import fontenc from './fontenc.json';
 import l3backend_dvips from './l3backend-dvips.json';
@@ -31,6 +31,10 @@ let pages = 2500;
 var coredump;
 var code;
 
+var browserFsReady = false;
+var coredumpReady = false;
+
+/*
 async function load() {
   let tex = await fetch(urlRoot + '/tex.wasm');
   code = await tex.arrayBuffer();
@@ -41,44 +45,45 @@ async function load() {
   // //let dumpStr = urlRoot + '/7620f557a41f2bf40820e76ba1fd4d89a484859d.gz';
 
   const compressed = new Uint8Array(
-    await fetch(urlRoot + '/core.dump').then(res => res.arrayBuffer()) //res.arrayBuffer())
-    , 0, pages * 65536);
+    await fetch(urlRoot + '/7620f557a41f2bf40820e76ba1fd4d89a484859d.gz').then(res => res.arrayBuffer()) //res.arrayBuffer())
+  );
+    // , 0, pages * 65536);
   // Above example with Node.js Buffers:
   // Buffer.from('H4sIAAAAAAAAE8tIzcnJBwCGphA2BQAAAA==', 'base64');
   console.log(compressed);
 
-  //const decompressed = fflate.decompressSync(compressed);
-
+  let decompressed;
+  try {
+    decompressed =
+      decompressSync(compressed);
+  } catch (err) {
+    console.log(err);
+  }
   //const decompressed = pako.ungzip(compressed);
 
-  coredump = compressed;//new Uint8Array(decompressed, 0, pages * 65536);
+  coredump = decompressed; //new Uint8Array(decompressed, 0, pages * 65536);
 
   console.log(coredump);
-}
+}*/
 
-/*
+
 async function load() {
-  let tex = await fetch(urlRoot + '/tex.wasm');
+
+  let tex = await fetch(urlRoot + '/ef253ef29e2f057334f77ead7f06ed8f22607d38.wasm');
   code = await tex.arrayBuffer();
 
-  let response = await fetchStream(urlRoot + '/core.dump.gz');
-  const reader = response.body.getReader();
-  const inf = new pako.Inflate();
+  library.initFs(function () { browserFsReady = true });
   
-  try {
-    while (true) {
-      const {done, value} = await reader.read();
-      inf.push(value, done);
-      if (done) break;
-    }
-  }
-  finally {
-    reader.releaseLock();
-  }
+  const decompressed = new Uint8Array(
+    await fetch(urlRoot + '/7620f557a41f2bf40820e76ba1fd4d89a484859d.gz').then(res => res.arrayBuffer()) //res.arrayBuffer())
+  );
 
-  coredump = new Uint8Array( inf.result, 0, pages*65536 );
+  coredump = new Uint8Array(decompressed, 0, pages * 65536);
+  console.log(coredump);
+  coredumpReady = true;
+
 }
-*/
+
 
 function copy(src)  {
   var dst = new Uint8Array(src.length);
@@ -244,6 +249,10 @@ preamble = preamble + "\\documentclass{ximera}\\renewcommand{\\documentclass}[2]
   //library.writeFileSync("./l3backend-dvips.def", Buffer.from(l3backend_dvips.FileBytes));
   //library.writeFileSync("./cmsl10.tfm", Buffer.from(cmsl10.FileBytes));
   //console.log(fs);
+
+  while (!browserFsReady && !coredumpReady) {
+    delay(200);
+  }
 
   fs.writeFileSync("./sample.tex", Buffer.from(input));
   fs.writeFileSync("./l3backend-dvips.def", Buffer.from(l3backend_dvips.FileBytes, 'base64'));

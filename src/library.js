@@ -76,7 +76,7 @@ module.exports = {
   initFs: async function (callback) {
     BrowserFS.configure({
       fs: 'InMemory',
-    }, function () { console.log('browserfs ready') });
+    }, function () { console.log('browserfs ready'); callback(); });
   },
 
   deleteEverything: function() {
