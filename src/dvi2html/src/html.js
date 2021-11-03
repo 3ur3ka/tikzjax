@@ -44,10 +44,11 @@ export default class HTMLMachine extends Machine {
     }
     endPage() {
         let height = 0;
-        if (this.savedPosition) {
-            height = Math.max(this.savedPosition.v, this.lastOutputHeight) * this.pointsPerDviUnit;
-        }
-        this.output.write(`<div style="position: relative; width: 100%; height: ${height}pt;" class="page">`);
+        //if (this.savedPosition) {
+            height = Math.max(this.savedPosition.v, this.lastOutputHeight) * this.pointsPerDviUnit / 2.;
+        //}
+        //this.output.write(`<div style="position: relative; width: ${100}%; height: ${height}pt;" class="page">`);
+        this.output.write(`<div style="position: relative; width: ${100}%;" class="page">`);
         for (let i = 0; i < this.pageContent.length; i++) {
             let x = this.pageContent[i];
             this.output.write(x);
@@ -65,11 +66,12 @@ export default class HTMLMachine extends Machine {
         let left = this.position.h * this.pointsPerDviUnit;
         let top = this.position.v * this.pointsPerDviUnit;
         if (this.svgDepth == 0) {
-            this.writeToPage(`<svg width="1in" height="1in" viewBox="0 0 72 72" style="position: absolute; top: ${top}pt; left: ${left}pt; overflow: visible;">\n`);
-            //this.writeToPage(`<svg width="1in" height="1in" viewBox="0 0 72 72" style="position: relative; overflow: visible;">\n`);
+            //this.writeToPage(`<svg width="1in" height="1in" viewBox="0 0 72 72" style="position: absolute; top: ${top}pt; left: ${left}pt; overflow: visible;">\n`);
+            this.writeToPage(`<svg viewBox="0 0 72 72" style="position:relative; overflow: visible;">\n`);
         }
         else {
             this.writeToPage(`<g transform="translate(${left},${top})">\n`);
+            //this.writeToPage(`<g>\n`);
         }
         this.svgDepth += 1;
     }

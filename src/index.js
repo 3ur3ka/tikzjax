@@ -4,7 +4,7 @@ import * as library from './library';
 import { ReadableStream } from "web-streams-polyfill";
 import fetchStream from 'fetch-readablestream';
 //import { fstat } from 'fs';
-
+import pako from 'pako';
 
 import fontenc from './fontenc.json';
 import l3backend_dvips from './l3backend-dvips.json';
@@ -67,21 +67,45 @@ async function load() {
 }*/
 
 
+/*
 async function load() {
 
   let tex = await fetch(urlRoot + '/ef253ef29e2f057334f77ead7f06ed8f22607d38.wasm');
   code = await tex.arrayBuffer();
 
-  library.initFs(function () { browserFsReady = true });
+  //library.initFs(function () { browserFsReady = true });
   
   const decompressed = new Uint8Array(
     await fetch(urlRoot + '/7620f557a41f2bf40820e76ba1fd4d89a484859d.gz').then(res => res.arrayBuffer()) //res.arrayBuffer())
   );
 
   coredump = new Uint8Array(decompressed, 0, pages * 65536);
-  console.log(coredump);
+  //console.log(coredump);
   coredumpReady = true;
 
+}
+*/
+
+async function load() {
+  let tex = await fetch(urlRoot + '/ef253ef29e2f057334f77ead7f06ed8f22607d38.wasm');
+  code = await tex.arrayBuffer();
+
+  let response = await fetchStream(urlRoot + '/7620f557a41f2bf40820e76ba1fd4d89a484859d.gz');
+  const reader = response.body.getReader();
+  const inf = new pako.Inflate();
+  
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      inf.push(value, done);
+      if (done) break;
+    }
+  }
+  finally {
+    reader.releaseLock();
+  }
+
+  coredump = new Uint8Array( inf.result, 0, pages*65536 );
 }
 
 
@@ -95,7 +119,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 async function tex(input) {
   if (input.match('\\\\begin *{document}') === null) {
-    input = '\\begin{document}\n' + input;
+    input = '\\thispagestyle{empty}\n' + '\\begin{document}\n' + input;
   }
   input = input + '\n\\end{document}\n';
 
@@ -250,6 +274,8 @@ preamble = preamble + "\\documentclass{ximera}\\renewcommand{\\documentclass}[2]
   //library.writeFileSync("./cmsl10.tfm", Buffer.from(cmsl10.FileBytes));
   //console.log(fs);
 
+  library.initFs(function () { browserFsReady = true });
+
   while (!browserFsReady && !coredumpReady) {
     delay(200);
   }
@@ -283,7 +309,7 @@ preamble = preamble + "\\documentclass{ximera}\\renewcommand{\\documentclass}[2]
 
   let dviData = library.readFileSync("sample.dvi");
   
-  console.log(btoa(unescape(encodeURIComponent(dviData))))
+  //console.log(btoa(unescape(encodeURIComponent(dviData))))
 
   return dviData;
   //return fs.readFileSync("./sample.dvi");
@@ -299,7 +325,7 @@ window.onload = async function(){
     
     let dvi = await tex(text);
     
-    console.log(dvi);
+    //console.log(dvi);
 
     let html = "";  
     const page = new Writable({
@@ -326,16 +352,30 @@ window.onload = async function(){
     console.log(machine);
 
     div.style.display = 'flex';
-    div.style.width = machine.paperwidth.toString() + "pt";
-    div.style.height = machine.paperheight.toString() + "pt";
+
+    const width = 154;
+    let height = 0;
+    
+    if (machine) {
+      height = Math.max(machine.savedPosition.v, machine.lastOutputHeight) * machine.pointsPerDviUnit;
+    }
+    //machine.setPapersize(width/3.0, height/3.0);
+
+    const widthPts = width + "pt";
+    const heightPts = height + "pt";
+    div.style.width = "80%"; //machine.paperwidth.toString() + "pt"; //machine.paperwidth.toString() + "pt"; //widthPts; //machine.paperwidth.toString() + "pt";
+    div.style.height = heightPts;//machine.paperheight.toString() + "pt"; //heightPts; //machine.paperheight.toString() + "pt";
     div.style['align-items'] = 'center';
-    div.style['justify-content'] = 'center';        
+    div.style['justify-content'] = 'center';
+    div.style['margin-left'] = '-77pt';
+    div.style['margin-top'] = '100pt';
+    div.style['max-width'] = '230pt';
 
     div.innerHTML = html;
     let svg = div.getElementsByTagName('svg');
-    svg[0].setAttribute("width", machine.paperwidth.toString() + "pt");
-    svg[0].setAttribute("height", machine.paperheight.toString() + "pt");
-    svg[0].setAttribute("viewBox", `-72 -72 ${machine.paperwidth} ${machine.paperheight}`);
+    //svg[0].setAttribute("width", "100%");//machine.paperwidth.toString() + "pt");//widthPts);//);
+    //svg[0].setAttribute("height", "100%");//machine.paperheight.toString() + "pt"); //heightPts);//machine.paperheight.toString() + "pt");
+    svg[0].setAttribute("viewBox", `-72 -72 72 72`);//${machine.paperwidth} ${machine.paperheight}`);//${width} ${height}`); //${machine.paperwidth} ${machine.paperheight}`);
 
     elt.parentNode.replaceChild(div, elt);
   };
