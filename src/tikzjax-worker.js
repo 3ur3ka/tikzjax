@@ -1,5 +1,5 @@
 import library from './library';
-import tcrm1000 from './tcrm1000.json';
+import tcrm1000 from './texsrc/tcrm1000.json';
 import * as fs from 'fs';
 
     // Polyfill instantiateStreaming for browsers missing it
