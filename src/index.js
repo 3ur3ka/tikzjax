@@ -1,7 +1,7 @@
 import { dvi2html } from './dvi2html/src/index';
 import { Writable } from 'stream';
 
-import { ReadableStream } from "web-streams-polyfill";
+//import { ReadableStream } from "web-streams-polyfill";
 import fetchStream from 'fetch-readablestream';
 import pako from 'pako';
 
@@ -46,6 +46,7 @@ async function load() {
 
   coredump = new Uint8Array(decompressed, 0, pages * 65536);
 }
+
 
 
 /*

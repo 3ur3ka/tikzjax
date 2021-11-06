@@ -18,18 +18,22 @@ module.exports = {
       'processGlobal': 'browserfs/dist/shims/process.js',
       'bufferGlobal': 'browserfs/dist/shims/bufferGlobal.js',
       'bfsGlobal': require.resolve('browserfs')
-    }
+    },
+    fallback: {
+      buffer: require.resolve('buffer/'),
+      stream: require.resolve("stream-browserify")
+    },
   },  
   output: {
     path: path.join(__dirname, 'public'),
     publicPath: '/',
     filename: '[name].js',
   },
-  node: {
-    Buffer: true
-  },
+  //node: {
+  //  Buffer: true
+  //},
   target: 'web',
-  devtool: '#source-map',
+  devtool: 'source-map',
   module: {
     noParse: /browserfs\.js/,    
     rules: [
@@ -50,6 +54,9 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.ProvidePlugin({ BrowserFS: 'bfsGlobal', process: 'processGlobal', Buffer: 'bufferGlobal' })
+    new webpack.ProvidePlugin({ BrowserFS: 'bfsGlobal', process: 'processGlobal', Buffer: 'bufferGlobal' }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    })
   ]
 };
