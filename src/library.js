@@ -71,9 +71,9 @@ function stopRewind() {
   wasmExports.asyncify_stop_rewind();
 }
 
-module.exports = {
+export default {
 
-  initFs: async function (callback) {
+ initFs: async function (callback) {
     BrowserFS.configure({
       fs: 'InMemory',
     }, function () { console.log('browserfs ready'); callback(); });

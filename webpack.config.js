@@ -5,10 +5,12 @@ const fs = require('fs');
 module.exports = {
   mode: 'development',
 
-    entry: [
-    'regenerator-runtime/runtime',
-    './src/index.js'
-  ],
+    entry: 
+      //'regenerator-runtime/runtime',
+      {
+        tikzjax: './src/index.js',
+        'tikzjax-worker': './src/tikzjax-worker.js',
+      },
 
   resolve: {
     extensions: ['.js', '.ts', '.json'],
@@ -23,7 +25,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'public'),
     publicPath: '/',
-    filename: 'tikzjax.js'
+    filename: '[name].js', //filename: 'tikzjax.js'
   },
   node: {
     Buffer: true
