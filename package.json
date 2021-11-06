@@ -14,7 +14,8 @@
     "pako": "^2.0.4",
     "stream-browserify": "^3.0.0",
     "string-replace-loader": "^3.0.3",
-    "web-streams-polyfill": "^3.1.1"
+    "web-streams-polyfill": "^3.1.1",
+    "worker-loader": "^3.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",

@@ -1,9 +1,6 @@
-//var fs = require('fs');
-//var process = require('process');
 var callstack = [];
 var stackstack = [];
 var files = [];
-//var exec = require('child_process').execSync;
 
 var memory = undefined;
 var inputBuffer = undefined;
@@ -14,17 +11,9 @@ let wasmExports;
 let view;
 
 let window = {};
-//const readline = require('readline');
 
 var filesystem = require('./filesystem.json');
 var fs = require('fs');
-//var tfmData =  require('dvi2html').tfmData;
-
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-//   prompt: ''
-// });
 
 var consoleBuffer = "";
 function writeToConsole(x) {
@@ -490,86 +479,6 @@ export default {
     return true;
   },
   
-  /*
-  get: function(descriptor, pointer, length) {
-    var file = files[descriptor];
-
-    var buffer = new Uint8Array( memory );
-    
-    if (file.stdin) {
-      if (file.position >= inputBuffer.length) {
-	buffer[pointer] = 13;
-        if (callback) callback();
-      } else {
-	buffer[pointer] = inputBuffer[file.position].charCodeAt(0);
-      }
-    } else {
-      if (file.descriptor) {
-
-        if (files.some(e => e.filename === file.filename)) {
-          return fs.readFileSync(file.filename);
-        }
-
-
-        if (fs.existsSync(file.filename) && file.filename != "sample.log") {
-
-          console.log(files);
-          // if (file.filename.match(/\.$/)) {
-          //   console.log("tfm data..");
-          //   //buffer = Uint8Array.from(tfmData(file.filename.replace(/\.tfm$/, '')));
-          //   fs.openSync(file.filename, 'r');
-          //   buffer = fs.readFileSync(file.filename);
-          
-          //   files.push({
-          //     filename: file.filename,
-          //     position: 0,
-          //     erstat: 0,
-          //     buffer: buffer,
-          //     descriptor: files.length
-          //   });
-          //   file.position = file.position + length;
-          //   return;
-          // } else {
-
-            console.log(file.filename);
-            //fs.openSync(file.filename, 'r');
-            //if (fs.readSync(file.descriptor, buffer, pointer, length, file.position) == 0) {
-            files.push({
-              filename: file.filename,
-              position: 0,
-              position2: 0,
-              erstat: 0,
-              eoln: false,
-              descriptor: fs.openSync(file.filename, 'r'),
-              content: fs.readFileSync(file.filename)
-            });
-            //buffer[pointer] = 0;
-            //file.eof = true;
-            //file.eoln = true;
-            
-          //}
-          //}
-        } else {
-          file.eof = true;
-          file.eoln = true;        
-          return;
-        }
-      } else {
-        file.eof = true;
-        file.eoln = true;        
-        return;
-      }
-    }
-    
-    file.eoln = false;
-    if (buffer[pointer] == 10)
-      file.eoln = true;
-    if (buffer[pointer] == 13)
-      file.eoln = true;
-
-    file.position = file.position + length;
-  },
-  */
   get: function(descriptor, pointer, length) {
     var file = files[descriptor];
 

@@ -5,6 +5,8 @@ import { Writable } from 'stream';
 import fetchStream from 'fetch-readablestream';
 import pako from 'pako';
 
+import tikzjaxWorker from './tikzjax.worker.js';
+
 /*
 import cmsl10 from './cmsl10.json';
 import cmex7 from './cmex7.json';
@@ -22,6 +24,13 @@ if (document.currentScript === undefined) {
   document.currentScript = scripts[scripts.length - 1];
 }
 
+var generateID = (function() {
+    var globalIdCounter = 0;
+    return function(baseStr) {
+        return(baseStr + globalIdCounter++);
+    }
+})();
+
 // Determine where we were loaded from; we'll use that to find a
 // tikzwolke server that can handle our POSTing tikz code
 var url = new URL(document.currentScript.src);
@@ -34,7 +43,7 @@ let pages = 2500;
 var coredump;
 var code;
 
-
+/*
 async function load() {
 
   let tex = await fetch(urlRoot + '/ef253ef29e2f057334f77ead7f06ed8f22607d38.wasm');
@@ -46,10 +55,8 @@ async function load() {
 
   coredump = new Uint8Array(decompressed, 0, pages * 65536);
 }
+*/
 
-
-
-/*
 async function load() {
   let tex = await fetch(urlRoot + '/ef253ef29e2f057334f77ead7f06ed8f22607d38.wasm');
   code = await tex.arrayBuffer();
@@ -71,7 +78,7 @@ async function load() {
 
   coredump = new Uint8Array( inf.result, 0, pages*65536 );
 }
-*/
+
 
 function copy(src)  {
   var dst = new Uint8Array(src.length);
@@ -112,10 +119,32 @@ window.onload = async function(){
   async function process(elt){
     var text = elt.childNodes[0].nodeValue;
 
-    var div = document.createElement('div');    
+    var div = document.createElement('div');
+
+    var spinnerContainerDiv = document.createElement('div');
+    spinnerContainerDiv.style.height = "150pt";
+    spinnerContainerDiv.style.width = "150pt";
+    spinnerContainerDiv.style.backgroundColor = "lightgray";
+    spinnerContainerDiv.style.display = "flex";
+    spinnerContainerDiv.style.justifyContent = "center";
+    spinnerContainerDiv.style.alignItems = "center";
+    spinnerContainerDiv.id = generateID("spinnerContainerDiv");
+
+    var spinnerDiv = document.createElement('div');
+    
+    spinnerContainerDiv.appendChild(spinnerDiv);
+
+    spinnerDiv.classList.add('spinner-grow');
+    spinnerDiv.classList.add('spinner-grow-sm');
+    
+    
+
+    elt.parentNode.appendChild(spinnerContainerDiv, elt);
     
     let dvi = await tex(text);
     
+    
+
     console.log('done dvi');
     console.log(dvi);
 
@@ -166,6 +195,7 @@ window.onload = async function(){
     //svg[0].setAttribute("height", "100%");//machine.paperheight.toString() + "pt"); //heightPts);//machine.paperheight.toString() + "pt");
     svg[0].setAttribute("viewBox", `-72 -72 72 72`);//${machine.paperwidth} ${machine.paperheight}`);//${width} ${height}`); //${machine.paperwidth} ${machine.paperheight}`);
 
+    document.getElementById(spinnerContainerDiv.id).remove();
     elt.parentNode.replaceChild(div, elt);
   };
 
@@ -174,7 +204,8 @@ window.onload = async function(){
     (e) => (e.getAttribute('type') === 'text/tikz'));
 
   tikzScripts.reduce( async (promise, element) => {
-    await promise;
+    //await promise;
+    promise;
     return process(element);
   }, Promise.resolve());
 };
@@ -190,7 +221,11 @@ function wasmWorker(wasmArrayBuffer, coredump, input) {
   let idPromises = {};
 
   return new Promise((resolve, reject) => {
-    const worker = new Worker(urlRoot + '/tikzjax-worker.js');
+    //const worker = new Worker(urlRoot + '/tikzjax-worker.js');
+
+    const worker = new tikzjaxWorker();//workerify(tikzjaxWorkerSource);
+
+    console.log('posting init message..');
     worker.postMessage({eventType: "INITIALISE", eventData: wasmArrayBuffer, coredump: coredump, input: input});
     worker.addEventListener('message', function(event) {
 
@@ -227,6 +262,7 @@ function wasmWorker(wasmArrayBuffer, coredump, input) {
           idPromises[eventId].reject(event.data.eventData);
           delete idPromises[eventId];
         }
+        console.log('error received back');
       }
         
     });

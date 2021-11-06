@@ -7,7 +7,7 @@ module.exports = {
 
   entry: {
     tikzjax: './src/index.js',
-    'tikzjax-worker': './src/tikzjax-worker.js',
+    //'tikzjax-worker': './src/tikzjax.worker.js',
   },
 
   resolve: {
@@ -37,6 +37,13 @@ module.exports = {
   module: {
     noParse: /browserfs\.js/,    
     rules: [
+      {
+        test: /\.worker\.js$/,
+        loader: "worker-loader",
+        options: {
+          inline: "no-fallback",
+        }
+      },
       {
         test: /\.js$/,
         loader: "babel-loader",
